@@ -203,6 +203,8 @@ class UserController {
       return response.status(500).json({ message: error.message });
     }
   }
+
+  
 }
 
 export default UserController;
