@@ -19,7 +19,7 @@ class UserController {
       // const user = await User.findOne({ email });
 
       if (user) {
-        return response.status(400).json({ message: "User already exists" });
+        return response.status(400).json({ error: "User already exists" });
       }
 
       const salt = bcrypt.genSaltSync(10);
@@ -45,11 +45,11 @@ class UserController {
           message: "User created successfully",
         });
       } else {
-        return response.status(400).json({ message: "Invalid userdata" });
+        return response.status(400).json({ error: "Invalid userdata" });
       }
     } catch (error) {
       console.log("Error in creating user: ", error.message);
-      return response.status(500).json({ message: error.message });
+      return response.status(500).json({ error: error.message });
     }
   }
 
@@ -62,13 +62,13 @@ class UserController {
       if (!user) {
         return response
           .status(400)
-          .json({ message: "Invalid username or password" });
+          .json({ error: "Invalid username or password" });
       }
       const isPasswordCorrect = await bcrypt.compare(password, user.password);
       if (!isPasswordCorrect) {
         return response
           .status(400)
-          .json({ message: "Invalid username or password" });
+          .json({ error: "Invalid username or password" });
       }
       generateTokenandSetCookie(user._id, response);
       response.status(200).json({
@@ -78,7 +78,7 @@ class UserController {
         message: "User logged in successfully",
       });
     } catch (error) {
-      return response.status(500).json({ message: error.message });
+      return response.status(500).json({ error: error.message });
     }
   }
 
@@ -92,7 +92,7 @@ class UserController {
         .json({ message: "User logged out successfully" });
     } catch (error) {
       console.log(error.message);
-      return response.status(500).json({ message: error.message });
+      return response.status(500).json({ error: error.message });
     }
   }
 
@@ -107,11 +107,11 @@ class UserController {
       if (id === request.user._id.toString()) {
         return response
           .status(400)
-          .json({ message: "You cannot follow yourself" });
+          .json({ error: "You cannot follow yourself" });
       }
 
       if (!userToFollow || !currentUser) {
-        return response.status(400).json({ message: "User not found" });
+        return response.status(400).json({ error: "User not found" });
       }
 
       const isAlreadyFollowing = currentUser.following.includes(id);
@@ -149,7 +149,7 @@ class UserController {
       }
     } catch (error) {
       console.log("Error in Follow and Unfollowing the user", error.message);
-      return response.status(500).json({ message: error.message });
+      return response.status(500).json({ error: error.message });
     }
   }
 
@@ -164,7 +164,7 @@ class UserController {
         return response.status(400).json({ message: "User not found" });
       }
       if (request.params.id != userId.toString()) {
-        return response.status(401).json({ message: "Unauthorized" });
+        return response.status(401).json({ error: "Unauthorized" });
       }
       if (password) {
         const salt = bcrypt.genSaltSync(10);
@@ -184,7 +184,7 @@ class UserController {
       });
     } catch (error) {
       console.log("Error in updating user", error.message);
-      return response.status(500).json({ message: error.message });
+      return response.status(500).json({ error: error.message });
     }
   }
 
@@ -195,12 +195,12 @@ class UserController {
       const username = request.params.username;
       const user = await User.findOne({ username }).select("-password");
       if (!user) {
-        return response.status(400).json({ message: "User not found" });
+        return response.status(400).json({ error: "User not found" });
       }
       return response.status(200).json({ user });
     } catch (error) {
       console.log("Error in getting user profile", error.message);
-      return response.status(500).json({ message: error.message });
+      return response.status(500).json({ error: error.message });
     }
   }
 
