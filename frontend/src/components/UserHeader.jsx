@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaInstagram } from "react-icons/fa6";
 import { CgMoreO } from "react-icons/cg";
 import {
   Avatar,
   Box,
+  Button,
   Flex,
   Link,
   Menu,
@@ -13,11 +14,83 @@ import {
   Portal,
   Text,
   VStack,
+  useStatStyles,
   useToast,
 } from "@chakra-ui/react";
+import { useRecoilValue } from "recoil";
+import userAtom from "../atoms/userAtom";
+import { Link as RouterLink } from "react-router-dom";
+import useShowToast from "../hooks/useShowToast";
 
-const UserHeader = () => {
+const UserHeader = ({ user }) => {
+  console.log(user);
   const toast = useToast();
+  const showToast = useShowToast();
+  const[updating,setUpdating] = useState(false);
+
+  // this is curretly logged in user
+  const currentUser = useRecoilValue(userAtom);
+  console.log(currentUser);
+
+  // set the data as we are following the person or not
+  const [following, setFollwing] = useState(
+    user.user.followers.includes(currentUser._id)
+  );
+
+  // function to follow the user
+  const handleFollowAndUnFollowTheUser = async () => {
+
+    // if the user is not logged in then show a toast message and return
+    if(!currentUser){
+      showToast("Error in following user", "login to follow a user", "error");
+      return;
+    }
+
+    
+    setUpdating(true);
+
+    // if the user is logged in then follow the user
+    try {
+      const response = await fetch(`/api/users/follow/${user.user._id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      console.log(data);
+
+      if (data.error) {
+        showToast("Error in following user", data.error, "error");
+        return;
+      }
+
+      // if we are following the user then unfollow the user
+      setFollwing(!following);
+
+      // show the follwers count of the user 
+      // eventual consistency coz accordinhg to backend logic we aree removing the user from the followers array
+      // but for fast response we are simulating the data in out frontend
+
+      if(following){
+        showToast("Unfollowed", `You have unfollowed ${user.user.name}`, "success");
+        user.user.followers.pop(currentUser._id);
+      }
+      else{
+        showToast("Followed", `You have followed ${user.user.name}`, "success");
+        user.user.followers.push(currentUser._id);
+      }
+
+
+    } catch (error) {
+      showToast("Error in following user", error.message, "error");
+    }
+    finally{
+      setUpdating(false);
+    }
+  };
+
   const copyURL = () => {
     const currentUrl = window.location.href;
     navigator.clipboard.writeText(currentUrl).then(() => {
@@ -34,10 +107,10 @@ const UserHeader = () => {
       <Flex justifyContent={"space-between"} w={"full"}>
         <Box>
           <Text fontSize={"2xl"} fontWeight={"bold"}>
-            Mark Zuckku
+            {user.user.name}
           </Text>
           <Flex gap={2} alignItems={"center"}>
-            <Text fontSize={"sm"}>zuck101</Text>
+            <Text fontSize={"sm"}>{user.user.username}</Text>
             <Text
               p={1}
               borderRadius={"full"}
@@ -50,24 +123,52 @@ const UserHeader = () => {
           </Flex>
         </Box>
         <Box>
-          <Avatar
-            name="mark zuckku"
-            src="./zuck-avatar.webp"
-            size={{
-              base: "md",
-              md: "xl",
-            }}
-          />
+          {user.user.profilePic ? (
+            <Avatar
+              name="mark zuckku"
+              src={user.user.profilePic}
+              size={{
+                base: "md",
+                md: "xl",
+              }}
+            />
+          ) : (
+            <Avatar
+              name="mark zuckku"
+              src="https://bit.ly/broken-link"
+              size={{
+                base: "md",
+                md: "xl",
+              }}
+            />
+          )}
         </Box>
       </Flex>
-      <Text>co-founder,exicutive,CEO of Meta,Instagram Platforms.</Text>
+      <Text>{user.user.bio}</Text>
+
+      {/* if the current user id === user.id then show the edit profile option */}
+      {currentUser._id === user.user._id && (
+        <RouterLink to="/update">
+          <Button size={"sm"}>Edit profile</Button>
+        </RouterLink>
+      )}
+
+      {/* or else show the follow or unfollow option as we are seeing that profile as a guest or as a user */}
+      {currentUser._id !== user.user._id && (
+        <Button onClick={handleFollowAndUnFollowTheUser} size={"sm"} isLoading={updating}>
+          {following ? "Unfollow" : "Follow"}
+        </Button>
+      )}
+
       <Flex w={"full"} justifyContent={"space-between"}>
         <Flex gap={2} alignItems={"center"}>
-          <Text color={"gray.light"}>2.3k followers</Text>
+          <Text color={"gray.light"}>
+            {user.user.followers.length} followers
+          </Text>
           <Box w={1} h={1} borderRadius={"full"} bg={"gray.light"}></Box>
           <Link color={"gray.light"}>instagram.com</Link>
         </Flex>
-        <Flex>
+        <Flex gap={2}>
           <Box className="icon-container">
             <FaInstagram size={24} cursor={"pointer"} />
           </Box>

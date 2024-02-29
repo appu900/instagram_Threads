@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import User from "../models/User_Model.js";
 import bcrypt from "bcryptjs";
 import generateTokenandSetCookie from "../utils/generateTokenandSetCookie.js";
+import {v2 as cloudinary} from "cloudinary";
 
 class UserController {
   // ** purpose: create a new user
@@ -42,6 +43,11 @@ class UserController {
           _id: newUser._id,
           name: newUser.name,
           email: newUser.email,
+          bio: newUser.bio,
+          profilePic: newUser.profilePic,
+          username: newUser.username,
+          followers: newUser.followers,
+          following: newUser.following,
           message: "User created successfully",
         });
       } else {
@@ -75,6 +81,11 @@ class UserController {
         _id: user._id,
         name: user.name,
         email: user.email,
+        bio: user.bio,
+        profilePic: user.profilePic,
+        username: user.username,
+        followers: user.followers,
+        following: user.following,
         message: "User logged in successfully",
       });
     } catch (error) {
@@ -157,7 +168,8 @@ class UserController {
 
   static async updateUser(request, response) {
     try {
-      const { name, username, email, password, profilePic, bio } = request.body;
+      const { name, username, email, password, bio } = request.body;
+      let { profilePic } = request.body;
       const userId = request.user._id;
       let user = await User.findById(userId);
       if (!user) {
@@ -171,6 +183,16 @@ class UserController {
         const hashedPassword = bcrypt.hashSync(password, salt);
         user.password = hashedPassword;
       }
+
+      // if the profile picture is provided from the frontend then upload it to cloudinary and update the profilePic field in the user document
+      if(profilePic){
+          // if the user already has a profile picture then delete it from cloudinary
+          if(user.profilePic){
+            await cloudinary.uploader.destroy(user.profilePic.split("/").pop().split(".")[0]);
+          }
+          const uploadedResponse = await cloudinary.uploader.upload(profilePic);
+          profilePic = uploadedResponse.secure_url;
+      }
       user.name = name || user.name;
       user.username = username || user.username;
       user.email = email || user.email;
@@ -179,7 +201,7 @@ class UserController {
 
       const updatedUser = await user.save();
       return response.status(200).json({
-        user,
+        updatedUser,
         message: "User updated successfully",
       });
     } catch (error) {
