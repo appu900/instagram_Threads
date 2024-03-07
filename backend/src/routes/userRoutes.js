@@ -5,6 +5,7 @@ const router = express.Router();
 
 
 router.get("/profile/:username",UserController.getUserProfile);
+router.get("/profile/id/:id",UserController.getUserProfileById);
 router.post("/signup", UserController.createUser);
 router.post("/login", UserController.loginUser);
 router.post("/logout", UserController.logoutUser);

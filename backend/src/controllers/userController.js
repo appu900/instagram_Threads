@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import User from "../models/User_Model.js";
 import bcrypt from "bcryptjs";
 import generateTokenandSetCookie from "../utils/generateTokenandSetCookie.js";
-import {v2 as cloudinary} from "cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 
 class UserController {
   // ** purpose: create a new user
@@ -185,13 +185,15 @@ class UserController {
       }
 
       // if the profile picture is provided from the frontend then upload it to cloudinary and update the profilePic field in the user document
-      if(profilePic){
-          // if the user already has a profile picture then delete it from cloudinary
-          if(user.profilePic){
-            await cloudinary.uploader.destroy(user.profilePic.split("/").pop().split(".")[0]);
-          }
-          const uploadedResponse = await cloudinary.uploader.upload(profilePic);
-          profilePic = uploadedResponse.secure_url;
+      if (profilePic) {
+        // if the user already has a profile picture then delete it from cloudinary
+        if (user.profilePic) {
+          await cloudinary.uploader.destroy(
+            user.profilePic.split("/").pop().split(".")[0]
+          );
+        }
+        const uploadedResponse = await cloudinary.uploader.upload(profilePic);
+        profilePic = uploadedResponse.secure_url;
       }
       user.name = name || user.name;
       user.username = username || user.username;
@@ -226,7 +228,22 @@ class UserController {
     }
   }
 
-  
+  // get a user data by its id
+  // end point is  /api/users/profile/id/data.....
+  static async getUserProfileById(request, response) {
+    try {
+      const { id } = request.params;
+      const user = await User.findById(id).select("-password");
+      if(!user){
+        return response.status(404).json({error:"user not found"});
+      }
+
+      return response.status(200).json(user);
+    } catch (error) {
+      console.log("Error in getuserprofile id,", error.message);
+      return response.status(500).json({ error: error.message });
+    }
+  }
 }
 
 export default UserController;

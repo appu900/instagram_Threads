@@ -3,12 +3,14 @@ import UserHeader from "../components/UserHeader";
 import UserPost from "../components/UserPost";
 import { useParams } from "react-router-dom";
 import useShowToast from "../hooks/useShowToast";
+import { Flex, Spinner } from "@chakra-ui/react";
 
 const Userpage = () => {
   const [user, setUser] = useState(null);
   console.log(user);
   const { username } = useParams();
   const showToast = useShowToast();
+  const[loding,setLoading] = useState(true);
 
   // fetch user data from server by using the url params
   useEffect(() => {
@@ -32,12 +34,24 @@ const Userpage = () => {
         showToast("Error in fetching user", error.message, "error");
         console.log(error.message);
       }
+      finally{
+        setLoading(false);
+      }
     };
     getUser();
   }, [username]);
 
+
+  if(!user && loding){
+    return (
+     <Flex justifyContent={"center"}>
+       <Spinner size={"xl"}/>
+     </Flex>
+    )
+  }
+
   // if user is not fetched yet show a loading message
-  if (!user) {
+  if (!user  && !loding) {
     return <h1>user not found</h1>;
   }
   return (

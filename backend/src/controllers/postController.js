@@ -1,35 +1,45 @@
 import Post from "../models/Post_Model.js";
 import User from "../models/User_Model.js";
+import {v2 as cloudinary} from "cloudinary";
 
 class postController {
   // ** purpose : create a post
 
   static async createPost(request, response) {
     try {
-      const { postedBy, title, image } = request.body;
+      const { postedBy, title} = request.body;
+      let{image} = request.body;
+
       if (!postedBy || !title) {
-        return response
-          .status(400)
-          .json({ message: "All fields are required" });
+        return response.status(400).json({ error: "All fields are required" });
       }
 
       //   check the user exists or not
       const user = await User.findById(postedBy);
       if (!user) {
-        return response.status(404).json({ message: "User not found" });
+        return response.status(404).json({ error: "User not found" });
       }
 
       if (user._id.toString() !== request.user._id.toString()) {
         return response
           .status(403)
-          .json({ message: "You are not authorized to perform this action" });
+          .json({ error: "You are not authorized to perform this action" });
       }
 
       const maxLength = 500;
       if (title.length > maxLength) {
         return response
           .status(400)
-          .json({ message: `Title should not exceed ${maxLength} characters` });
+          .json({ error: `Title should not exceed ${maxLength} characters` });
+      }
+
+      // if we have a image use cloudinary to upload the image
+      // if we don't have a image then create a post without image
+
+      if(image){
+        // upload the image to cloudinary
+        const uploadedResponse = await cloudinary.uploader.upload(image);
+        image = uploadedResponse.secure_url;
       }
 
       const newPost = new Post({
@@ -45,7 +55,7 @@ class postController {
         .json({ message: "Post created successfully", savedPost });
     } catch (error) {
       console.log("Error in postController.createPost: ", error.message);
-      return response.status(500).json({ message: error.message });
+      return response.status(500).json({ error: error.message });
     }
   }
 
@@ -56,12 +66,12 @@ class postController {
       const { id } = request.params;
       const post = await Post.findById(id);
       if (!post) {
-        return response.status(404).json({ message: "Post not found" });
+        return response.status(404).json({ error: "Post not found" });
       }
       return response.status(200).json({ post });
     } catch (error) {
       console.log("Error in postController.getPost: ", error.message);
-      return response.status(500).json({ message: error.message });
+      return response.status(500).json({ error: error.message });
     }
   }
 
@@ -72,13 +82,13 @@ class postController {
       const { id } = request.params;
       const post = await Post.findById(id);
       if (!post) {
-        return response.status(404).json({ message: "Post not found" });
+        return response.status(404).json({ error: "Post not found" });
       }
       const user = await User.findById(request.user._id);
       if (post.postedBy.toString() !== request.user._id.toString()) {
         return response
           .status(403)
-          .json({ message: "You are not authorized to perform this action" });
+          .json({ error: "You are not authorized to perform this action" });
       }
 
       const deletedPost = await Post.findByIdAndDelete(id);
@@ -87,7 +97,7 @@ class postController {
         .json({ message: "Post deleted successfully", deletedPost });
     } catch (error) {
       console.log("Error in postController.deletePost: ", error.message);
-      return response.status(500).json({ message: error.message });
+      return response.status(500).json({ error: error.message });
     }
   }
 
@@ -99,13 +109,13 @@ class postController {
       const userId = request.user._id;
       const post = await Post.findById(postId);
       if (!post) {
-        return response.status(404).json({ message: "Post not found" });
+        return response.status(404).json({ error: "Post not found" });
       }
 
       if (!userId) {
         return response
           .status(401)
-          .json({ message: "you need to login first to like a post" });
+          .json({ error: "you need to login first to like a post" });
       }
 
       const isUserLikedThePost = post.likes.includes(userId);
@@ -125,7 +135,7 @@ class postController {
       }
     } catch (error) {
       console.log("Error in postController.likeAndUnlikePost: ", error.message);
-      return response.status(500).json({ message: error.message });
+      return response.status(500).json({ error: error.message });
     }
   }
 
@@ -144,13 +154,13 @@ class postController {
       if (!text) {
         return response
           .status(400)
-          .json({ message: "Comment should not be empty or blank" });
+          .json({ error: "Comment should not be empty or blank" });
       }
 
       // check if the post exists or not
       const post = await Post.findById(postId);
       if (!post) {
-        return response.status(404).json({ message: "Post not found" });
+        return response.status(404).json({ error: "Post not found" });
       }
 
       const replay = {
@@ -169,7 +179,7 @@ class postController {
         .json({ message: "Replay added successfully", post });
     } catch (error) {
       console.log("Error in postController.replyToPost: ", error.message);
-      return response.status(500).json({ message: error.message });
+      return response.status(500).json({ error: error.message });
     }
   }
 
@@ -177,41 +187,44 @@ class postController {
 
   static async getAllPosts(request, response) {
     try {
-
-        const userId = request.user._id;
-        const user = await User.findById(userId);
-        if(!user){
-            return response.status(404).json({message: "login and follow some people to see their posts in your feed"});
-        }
-        const following = user.following;
-        console.log("user follwing: ", following);
-        const feedPost = await Post.find({postedBy: {$in:following}}).sort({createdAt: -1});
-        return response.status(200).json({feedPost});
-        
+      const userId = request.user._id;
+      const user = await User.findById(userId);
+      if (!user) {
+        return response
+          .status(404)
+          .json({
+            error:
+              "login and follow some people to see their posts in your feed",
+          });
+      }
+      const following = user.following;
+      console.log("user follwing: ", following);
+      const feedPost = await Post.find({ postedBy: { $in: following } }).sort({
+        createdAt: -1,
+      });
+      return response.status(200).json(feedPost );
     } catch (error) {
-        console.log("Error in postController.getAllPosts: ", error.message);
-        return response.status(500).json({ message: error.message });
-        
+      console.log("Error in postController.getAllPosts: ", error.message);
+      return response.status(500).json({ error: error.message });
     }
   }
 
-
   //   ** purpose : get all posts for profile
 
-  static async getProfilePosts(request,response){
+  static async getProfilePosts(request, response) {
     try {
-
-        const{username} = request.params;
-        const user = await User.findOne({username});
-        if(!user){
-            return response.status(404).json({message: "User not found"});
-        }
-        const profilePost = await Post.find({postedBy: user._id}).sort({createdAt: -1});
-        return response.status(200).json({profilePost});
-        
+      const { username } = request.params;
+      const user = await User.findOne({ username });
+      if (!user) {
+        return response.status(404).json({ error: "User not found" });
+      }
+      const profilePost = await Post.find({ postedBy: user._id }).sort({
+        createdAt: -1,
+      });
+      return response.status(200).json({ profilePost });
     } catch (error) {
-        console.log("Error in postController.getProfilePosts: ", error.message);
-        return response.status(500).json({message: error.message})
+      console.log("Error in postController.getProfilePosts: ", error.message);
+      return response.status(500).json({ error: error.message });
     }
   }
 }

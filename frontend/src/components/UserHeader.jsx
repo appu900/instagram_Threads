@@ -30,7 +30,7 @@ const UserHeader = ({ user }) => {
 
   // this is curretly logged in user
   const currentUser = useRecoilValue(userAtom);
-  console.log(currentUser);
+  console.log("this is current user :",currentUser);
 
   // set the data as we are following the person or not
   const [following, setFollwing] = useState(
