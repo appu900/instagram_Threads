@@ -8,8 +8,8 @@ const HomePage = () => {
   const showToast = useShowToast();
   const [posts, setPosts] = useState([]);
   const [loding, setLoding] = useState(false);
-
-  // fetching feed data
+  
+  // fetching feed data from server 
   useEffect(() => {
     const getFeedPosts = async () => {
       setLoding(true);

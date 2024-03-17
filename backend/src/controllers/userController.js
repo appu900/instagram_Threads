@@ -127,7 +127,7 @@ class UserController {
 
       const isAlreadyFollowing = currentUser.following.includes(id);
       if (isAlreadyFollowing) {
-        // unfollow the user if already following
+        //  unfollow the user if already following
         // modify currentUser's following array
 
         await User.findByIdAndUpdate(request.user._id, {
