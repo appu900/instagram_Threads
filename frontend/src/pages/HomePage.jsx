@@ -48,7 +48,7 @@ const HomePage = () => {
         <div>
           <h1 className="text-xl text-center mt-10">follow some people to show posts</h1>
           <div className="flex justify-center mt-5">
-            <Link to="/explore">
+            <Link to="/search">
               <Button colorScheme="blue">Explore people</Button>
             </Link>
           </div>
