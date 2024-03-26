@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useRecoilValue } from "recoil";
 import userAtom from "../atoms/userAtom";
 import useShowToast from "../hooks/useShowToast";
+import { RiShareForward2Line } from "react-icons/ri";
 
 const ProfileCards = ({ user }) => {
   console.log(user.followers);
@@ -90,7 +91,7 @@ const ProfileCards = ({ user }) => {
           {follwing ? "Unfollow" : "Follow"}
         </Button> */}
         <Button size="sm" onClick={handleNavigate}>
-        
+         <RiShareForward2Line />
         </Button>
       </div>
     </div>
