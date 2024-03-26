@@ -62,13 +62,13 @@ export default function UserProfileEdit() {
         showToast("Error in updating user", data.error, "error");
         return;
       }
-      console.log(data);
+      console.log(data.updatedUser);
 
       // store data to localstorage
-      localStorage.setItem("user_info_thread", JSON.stringify(data));
+      localStorage.setItem("user_info_thread", JSON.stringify(data.updatedUser));
 
       // set user atom with updated user data
-      setUser(data);
+      setUser(data.updatedUser);
       showToast("User updated", "User updated successfully", "success");
 
     } catch (error) {

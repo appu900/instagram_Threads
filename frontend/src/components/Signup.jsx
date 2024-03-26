@@ -1,5 +1,4 @@
 
-
 import {
   Flex,
   Box,
@@ -29,7 +28,7 @@ export default function SignupCard() {
   const toast = useToast();  
   const [showPassword, setShowPassword] = useState(false);
   const setAuthScreenState = useSetRecoilState(authScreenatom);
-  const setUser = useRecoilState(userAtom);
+  const setUser = useSetRecoilState(userAtom);
   const showToast = useShowToast();
   const [inputs, setInputs] = useState({
     name: "",
@@ -61,6 +60,8 @@ export default function SignupCard() {
     //   if we hava a user save this user to our localstorage
      localStorage.setItem("user_info_thread",JSON.stringify(data))
      setUser(data);
+
+     window.location.reload();
      showToast("Signup Sucessfull", "You have been signed up", "success");
 
     } catch (error) {

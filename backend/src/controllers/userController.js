@@ -244,6 +244,23 @@ class UserController {
       return response.status(500).json({ error: error.message });
     }
   }
+
+  // get all users by default if search params in not given else send the data of users whose username matches the search query
+  static async getAllUsers(request, response) {
+    try {
+      const search = request.query.search;
+      let users;
+      if (search) {
+        users = await User.find({ name: { $regex: search, $options: "i" } }).select("-password");
+      } else {
+        users = await User.find().select("-password");
+      }
+      return response.status(200).json(users);
+    } catch (error) {
+      console.log("Error in getting all users", error.message);
+      return response.status(500).json({ error: error.message });
+    }
+  }
 }
 
 export default UserController;

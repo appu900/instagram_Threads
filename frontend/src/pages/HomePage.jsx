@@ -45,7 +45,14 @@ const HomePage = () => {
 
       {/* if user  dont follow any one */}
       {!loding && posts.length === 0 && (
-        <h1>follow some users to see the feed</h1>
+        <div>
+          <h1 className="text-xl text-center mt-10">follow some people to show posts</h1>
+          <div className="flex justify-center mt-5">
+            <Link to="/explore">
+              <Button colorScheme="blue">Explore people</Button>
+            </Link>
+          </div>
+        </div>
       )}
 
       {/* if we have posts */}

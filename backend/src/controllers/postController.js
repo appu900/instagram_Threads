@@ -68,7 +68,7 @@ class postController {
       if (!post) {
         return response.status(404).json({ error: "Post not found" });
       }
-      return response.status(200).json({ post });
+      return response.status(200).json(post);
     } catch (error) {
       console.log("Error in postController.getPost: ", error.message);
       return response.status(500).json({ error: error.message });
@@ -89,6 +89,12 @@ class postController {
         return response
           .status(403)
           .json({ error: "You are not authorized to perform this action" });
+      }
+
+      //** delete the image associated with the post from cloudinary server if it is present in the post
+      if(post.image){
+        const publicId = post.image.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
       }
 
       const deletedPost = await Post.findByIdAndDelete(id);
@@ -227,6 +233,24 @@ class postController {
       return response.status(500).json({ error: error.message });
     }
   }
+
+
+  // ** get all post for explore page if they have image in it
+  static async getExplorePosts(request, response) {
+    try {
+      const posts = await Post.find({ image: { $exists: true, $ne: "" } }).sort({
+        createdAt: -1,
+      });
+      // const posts = await Post.find();
+      return response.status(200).json(posts);
+    } catch (error) {
+      console.log("Error in postController.getExplorePosts: ", error.message);
+      return response.status(500).json({ error: error.message });
+    }
+  }
+
+
+  
 }
 
 export default postController;

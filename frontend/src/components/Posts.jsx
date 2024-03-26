@@ -4,8 +4,15 @@ import { Link, useNavigate } from "react-router-dom";
 import Actions from "./Actions";
 import useShowToast from "../hooks/useShowToast";
 import {formatDistanceToNow} from "date-fns";
+import { FaDeleteLeft } from "react-icons/fa6";
+import { useRecoilValue } from "recoil";
+import userAtom from "../atoms/userAtom";
+import { MdDelete } from "react-icons/md";
+
 
 const Posts = ({ post, postedBy }) => {
+  const currentUser = useRecoilValue(userAtom);
+  console.log(currentUser)
   const [liked, setLiked] = useState(false);
   const [user, setUser] = useState(null);
   const showToast = useShowToast();
@@ -35,6 +42,27 @@ const Posts = ({ post, postedBy }) => {
     };
     getUser();
   }, [postedBy]);
+
+  // function to delete the post
+  const handleDeletePost = async(e) =>{
+    try {
+      e.preventDefault();
+      if(!window.confirm("Are you sure you want to delete this post?")) return;
+      const response = await fetch("/api/posts/" + post._id, {
+        method: "DELETE",
+      });
+
+      const responseData = await response.json();
+      if (responseData.error) {
+        showToast("Error", responseData.error, "error");
+        return;
+      }
+      showToast("Success", responseData.message, "success"); 
+      window.location.reload();
+    } catch (error) {
+      showToast("Error", error.message, "error");
+    }
+  }
 
   if (user === null) {
     return null;
@@ -117,6 +145,13 @@ const Posts = ({ post, postedBy }) => {
                   addSuffix: true,
                 })} 
               </Text>
+
+              {/* <FaDeleteLeft/> */}
+              {currentUser?._id === user._id && (
+                <MdDelete 
+                onClick={handleDeletePost}
+                size={26}/>
+              )}
             
             </Flex>
           </Flex>

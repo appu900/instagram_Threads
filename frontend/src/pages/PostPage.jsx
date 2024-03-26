@@ -6,22 +6,63 @@ import {
   Box,
   Divider,
   Button,
+  Spinner,
 } from "@chakra-ui/react";
-import React from "react";
+import React, { useEffect } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import Actions from "../components/Actions";
 import { useState } from "react";
 import Comment from "../components/Comment";
+import useShowToast from "../hooks/useShowToast";
+import useGetUserProfile from "../hooks/useGetUserProfile";
+import { useParams } from "react-router-dom";
 
 const PostPage = () => {
-  const [liked, setLiked] = useState(false);
+  const { user, loading } = useGetUserProfile();
+  const [post, setPost] = useState(null);
+  console.log(user);
+  const showToast = useShowToast();
+  const { postId } = useParams();
+
+  useEffect(() => {
+    const getPost = async () => {
+      try {
+        const response = await fetch(`/api/posts/${postId}`);
+        const data = await response.json();
+
+        if (data.error) {
+          showToast("Error in fetching post", data.error, "error");
+          return;
+        }
+        // console.log("this is the post data", data);
+        setPost(data);
+      } catch (error) {
+        showToast("Error in fetching post", error.message, "error");
+      }
+    };
+    getPost();
+  }, [postId]);
+
+  console.log(post);
+
+  if (!post) return null;
+
+  if (!user && loading) {
+    return (
+      <Flex justifyContent={"center"} alignItems={"center"} h={"100vh"}>
+        <Spinner />
+      </Flex>
+    );
+  }
+  console.log(user);
+  console.log(post);
   return (
     <>
       <Flex>
         <Flex w={"full"} alignItems={"center"} gap={3}>
-          <Avatar name="mark zuckku" src="/zuck-avatar.webp" size={"md"} />
+          <Avatar name="mark zuckku" src={user.user.profilePic} size={"md"} />
           <Flex>
-            <Text fontsize={"sm"}>markzuccku</Text>
+            <Text fontsize={"sm"}>{user.user.username}</Text>
             <Image
               src={"/verified.png"}
               alt={"verified"}
@@ -38,44 +79,48 @@ const PostPage = () => {
           <BsThreeDots />
         </Flex>
       </Flex>
-      <Text my={3}>lets talk about threads</Text>
-      <Box
-        borderRadius={6}
-        overflow={"hidden"}
-        border={"1px solid"}
-        borderColor={"gray.light"}
-      >
-        <Image src="/post1.jpg" w={"full"} />
-      </Box>
+      <Text my={3}>{post.title}</Text>
+      {post.image && (
+        <Box
+          borderRadius={6}
+          overflow={"hidden"}
+          border={"1px solid"}
+          borderColor={"gray.light"}
+        >
+          <Image src={post.image} w={"full"} />
+        </Box>
+      )}
       <Flex gap={3} my={3}>
-        <Actions liked={liked} setLiked={setLiked} />
+        <Actions post={post} />
       </Flex>
-      <Flex gap={2} alignItems={"center"}>
+      {/* <Flex gap={2} alignItems={"center"}>
         <Text color={"gray.light"} fontSize="sm">
-          10 replies
+          {post.replies.length} replies
         </Text>
         <Box w={0.5} h={0.5} borderRadius={"full"} bg={"gray.light"}></Box>
         <Text color={"gray.light"} fontSize="sm">
-          {200 + (liked ? 1 : 0)} likes
+          {post.likes.length} likes
         </Text>
-      </Flex>
+      </Flex> */}
       <Divider my={4} />
       <Flex>
         <GetTheApplication />
       </Flex>
       <Divider my={4} />
-      <Comment
+      {
+        post.replies.map((replay)=>(
+          <Comment
+           key={replay._id}
+           reply={replay}
+          />
+        ))
+      }
+      {/* <Comment
         likes={100}
         comment={"this sounds nice"}
         createdAt={"9d"}
         userAvatar={"https://bit.ly/dan-abramov"}
-      />
-      <Comment
-        likes={4100}
-        comment={"nice actually"}
-        createdAt={"4d"}
-        userAvatar={"https://bit.ly/dan-abramov"}
-      />
+      /> */}
     </>
   );
 };

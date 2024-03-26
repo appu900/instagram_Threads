@@ -34,7 +34,7 @@ const UserHeader = ({ user }) => {
 
   // set the data as we are following the person or not
   const [following, setFollwing] = useState(
-    user.user.followers.includes(currentUser._id)
+    user.user.followers.includes(currentUser?._id)
   );
 
   // function to follow the user
@@ -75,11 +75,11 @@ const UserHeader = ({ user }) => {
 
       if(following){
         showToast("Unfollowed", `You have unfollowed ${user.user.name}`, "success");
-        user.user.followers.pop(currentUser._id);
+        user.user.followers.pop(currentUser?._id);
       }
       else{
         showToast("Followed", `You have followed ${user.user.name}`, "success");
-        user.user.followers.push(currentUser._id);
+        user.user.followers.push(currentUser?._id);
       }
 
 
@@ -147,14 +147,14 @@ const UserHeader = ({ user }) => {
       <Text>{user.user.bio}</Text>
 
       {/* if the current user id === user.id then show the edit profile option */}
-      {currentUser._id === user.user._id && (
+      {currentUser?._id === user.user._id && (
         <RouterLink to="/update">
           <Button size={"sm"}>Edit profile</Button>
         </RouterLink>
       )}
 
       {/* or else show the follow or unfollow option as we are seeing that profile as a guest or as a user */}
-      {currentUser._id !== user.user._id && (
+      {currentUser?._id !== user.user._id && (
         <Button onClick={handleFollowAndUnFollowTheUser} size={"sm"} isLoading={updating}>
           {following ? "Unfollow" : "Follow"}
         </Button>

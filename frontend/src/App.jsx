@@ -11,10 +11,12 @@ import userAtom from "./atoms/userAtom";
 import LogoutButton from "./components/LogoutButton";
 import UserProfileEdit from "./pages/UpdateProfile";
 import CreatePost from "./components/CreatePost";
+import ExplorePage from "./pages/ExplorePage";
+import SearchPage from "./pages/SearchPage";
 
 const App = () => {
   const user = useRecoilValue(userAtom);
-  
+
   return (
     <Container maxW="620px">
       <Header />
@@ -32,12 +34,13 @@ const App = () => {
           element={user == null ? <Authpage /> : <UserProfileEdit />}
         />
         <Route path="/:username" element={<Userpage />} />
-        <Route path="/:username/post/:pid" element={<PostPage />} />
+        <Route path="/:username/post/:postId" element={<PostPage />} />
+        <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/search" element={<SearchPage />} />
       </Routes>
 
       {user !== null && <LogoutButton />}
       {user !== null && <CreatePost />}
-
     </Container>
   );
 };
